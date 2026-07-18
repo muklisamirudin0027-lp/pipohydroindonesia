@@ -1,9 +1,19 @@
 import { motion, useScroll, useMotionValueEvent } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { auth } from "../lib/firebase";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -61,13 +71,13 @@ export function Header() {
         {/* CTA */}
         <div className="flex items-center">
           <Link 
-            to="/login"
+            to={isLoggedIn ? "/dashboard" : "/login"}
             className={`flex items-center gap-3 border px-6 py-3 text-xs font-semibold tracking-widest transition-all duration-300 rounded-full ${
             isScrolled
               ? "border-[#004D40] bg-[#004D40] text-white hover:bg-[#008060] hover:border-[#008060] shadow-md"
               : "border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white hover:text-[#004D40]"
           }`}>
-            LOGIN PETANI
+            {isLoggedIn ? "DASHBOARD" : "LOGIN PETANI"}
           </Link>
         </div>
       </div>

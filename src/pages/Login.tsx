@@ -1,17 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Leaf, User, ArrowRight, Lock, ArrowLeft } from "lucide-react";
 import { auth, googleProvider, db } from "../lib/firebase";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigate("/dashboard");
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
   const checkRoleAndNavigate = async (uid: string) => {
     try {
@@ -40,6 +50,7 @@ export function Login() {
     setError("");
     setLoading(true);
     try {
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await checkRoleAndNavigate(userCredential.user.uid);
     } catch (err: any) {
@@ -54,6 +65,7 @@ export function Login() {
     setError("");
     setLoading(true);
     try {
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
       const result = await signInWithPopup(auth, googleProvider);
       await checkRoleAndNavigate(result.user.uid);
     } catch (err: any) {
@@ -131,7 +143,30 @@ export function Login() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className="w-5 h-5 border-2 border-gray-300 rounded-md peer-checked:bg-[#008060] peer-checked:border-[#008060] transition-all flex items-center justify-center group-hover:border-[#008060]">
+                    <svg
+                      className={`w-3.5 h-3.5 text-white ${rememberMe ? 'opacity-100' : 'opacity-0'} transition-opacity`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Tetap masuk</span>
+              </label>
+
               <a href="#" className="text-xs font-medium text-[#008060] hover:text-[#004D40]">
                 Lupa kata sandi?
               </a>
