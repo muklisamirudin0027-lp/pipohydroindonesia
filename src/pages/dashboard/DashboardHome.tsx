@@ -35,7 +35,7 @@ export function DashboardHome() {
         {/* Kebun Status */}
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#424242]">Status Kebun (Kradenan)</h3>
+            <h3 className="text-lg font-semibold text-[#424242]">Status Kebun Saya</h3>
             <span className="flex items-center gap-2 text-xs font-semibold text-[#008060] bg-[#008060]/10 px-3 py-1 rounded-full">
               <Activity className="h-3 w-3" />
               SISTEM NORMAL

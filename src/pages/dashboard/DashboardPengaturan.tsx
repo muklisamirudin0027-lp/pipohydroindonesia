@@ -27,8 +27,8 @@ export function DashboardPengaturan() {
               PM
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-[#424242]">Petani Milenial</h3>
-              <p className="text-sm text-gray-500 mb-3">Admin Kebun Kradenan</p>
+              <h3 className="text-lg font-semibold text-[#424242]">Petani Mandiri</h3>
+              <p className="text-sm text-gray-500 mb-3">Pemilik Kebun</p>
               <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
                 Ubah Foto
               </button>
@@ -41,21 +41,21 @@ export function DashboardPengaturan() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nama Kebun / Usaha</label>
                 <div className="relative">
                   <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input type="text" defaultValue="Pipo Hydro Indonesia" className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]" />
+                  <input type="text" defaultValue="Kebun Hidroponik Saya" className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Penanggung Jawab</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input type="text" defaultValue="Muklis" className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]" />
+                  <input type="text" defaultValue="Nama Anda" className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]" />
                 </div>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Alamat Kebun Utama</label>
-              <textarea rows={3} defaultValue="Dukuh Tambak, Desa Sumber, Kec. Kradenan, Kab. Blora, Jawa Tengah" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]"></textarea>
+              <textarea rows={3} defaultValue="Alamat Kebun Anda" className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]"></textarea>
             </div>
 
             <div className="pt-4 flex justify-end">

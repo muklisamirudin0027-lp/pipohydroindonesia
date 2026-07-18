@@ -83,8 +83,8 @@ export function Dashboard() {
             </button>
             <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#424242]">Petani Milenial</p>
-                <p className="text-xs text-gray-500">Admin Kradenan</p>
+                <p className="text-sm font-semibold text-[#424242]">Petani Mandiri</p>
+                <p className="text-xs text-gray-500">Pemilik Kebun</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-[#008060]/10 flex items-center justify-center text-[#008060] font-bold">
                 PM

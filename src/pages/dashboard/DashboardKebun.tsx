@@ -2,10 +2,10 @@ import { Leaf, Search, Plus } from "lucide-react";
 
 export function DashboardKebun() {
   const varietasList = [
-    { name: "Selada Sementel", jumlah: 1500, hst: 25, status: "Siap Panen", meja: "Meja 1 - Kradenan" },
-    { name: "Selada Caipira", jumlah: 1200, hst: 15, status: "Pertumbuhan", meja: "Meja 2 - Kradenan" },
-    { name: "Selada RZ", jumlah: 1550, hst: 5, status: "Persemaian", meja: "Meja 3 - Kradenan" },
-    { name: "Selada Sementel", jumlah: 2000, hst: 20, status: "Pertumbuhan", meja: "Meja 1 - Randublatung" },
+    { name: "Selada Sementel", jumlah: 1500, hst: 25, status: "Siap Panen", meja: "Area A - Meja 1" },
+    { name: "Selada Caipira", jumlah: 1200, hst: 15, status: "Pertumbuhan", meja: "Area A - Meja 2" },
+    { name: "Selada RZ", jumlah: 1550, hst: 5, status: "Persemaian", meja: "Area A - Meja 3" },
+    { name: "Selada Sementel", jumlah: 2000, hst: 20, status: "Pertumbuhan", meja: "Area B - Meja 1" },
   ];
 
   return (
@@ -33,9 +33,9 @@ export function DashboardKebun() {
           </div>
           <div className="flex gap-2 text-sm">
             <select className="border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#008060]">
-              <option>Semua Lokasi</option>
-              <option>Kradenan</option>
-              <option>Randublatung</option>
+              <option>Semua Area</option>
+              <option>Area A</option>
+              <option>Area B</option>
             </select>
           </div>
         </div>
