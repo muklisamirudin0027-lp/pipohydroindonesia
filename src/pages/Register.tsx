@@ -47,7 +47,7 @@ export function Register() {
         if (role === "petani") {
           navigate("/dashboard");
         } else {
-          navigate("/");
+          navigate("/pembeli");
         }
       } catch (dbError: any) {
         if (dbError.message === "offline") {
@@ -91,7 +91,7 @@ export function Register() {
         if (currentRole === "petani") {
           navigate("/dashboard");
         } else {
-          navigate("/");
+          navigate("/pembeli");
         }
       } catch (dbError: any) {
         console.error("Database error during Google sign-in:", dbError);

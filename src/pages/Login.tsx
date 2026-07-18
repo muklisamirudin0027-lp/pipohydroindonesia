@@ -18,8 +18,8 @@ export function Login() {
       const userDoc = await getDoc(doc(db, "users", uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        if (userData.role === "customer") {
-          navigate("/");
+        if (userData.role === "pembeli" || userData.role === "customer") {
+          navigate("/pembeli");
         } else {
           navigate("/dashboard");
         }
