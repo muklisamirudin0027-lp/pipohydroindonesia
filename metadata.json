@@ -1,0 +1,6 @@
+{
+  "name": "HydroHerb Gardens",
+  "description": "A premium, modern desktop website for a sustainable vertical hydroponic farm, featuring an elegant design with emerald green and charcoal accents.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
