@@ -47,10 +47,15 @@ export function Hero() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <Link to="/login" className="group flex w-full sm:w-auto items-center justify-center gap-3 rounded-full bg-[#008060] px-8 py-4 text-sm font-semibold tracking-widest text-white transition-all hover:bg-[#4ADE80] hover:text-[#004D40] hover:shadow-[0_0_20px_rgba(74,222,128,0.4)]">
+            <a 
+              href="https://wa.me/6281234567890?text=Halo%20Admin%20Pipo%20Hydro,%20saya%20ingin%20memesan%20sayuran%20hidroponik."
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group flex w-full sm:w-auto items-center justify-center gap-3 rounded-full bg-[#008060] px-8 py-4 text-sm font-semibold tracking-widest text-white transition-all hover:bg-[#4ADE80] hover:text-[#004D40] hover:shadow-[0_0_20px_rgba(74,222,128,0.4)]"
+            >
               PESAN SEKARANG
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
+            </a>
             <a href="#about-us" className="flex w-full sm:w-auto items-center justify-center gap-3 rounded-full border border-white/30 bg-white/5 px-8 py-4 text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:bg-white hover:text-[#004D40]">
               CERITA KAMI
             </a>

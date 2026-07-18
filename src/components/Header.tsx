@@ -67,7 +67,7 @@ export function Header() {
               ? "border-[#004D40] bg-[#004D40] text-white hover:bg-[#008060] hover:border-[#008060] shadow-md"
               : "border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white hover:text-[#004D40]"
           }`}>
-            MASUK / PESAN
+            LOGIN PETANI
           </Link>
         </div>
       </div>

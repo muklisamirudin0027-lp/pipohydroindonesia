@@ -50,10 +50,15 @@ export function FeaturedProducts() {
             </h2>
           </div>
           
-          <Link to="/login" className="group flex items-center gap-3 text-xs font-semibold tracking-widest text-[#004D40] transition-colors hover:text-[#008060]">
+          <a 
+            href="https://wa.me/6281234567890?text=Halo%20Admin%20Pipo%20Hydro,%20saya%20ingin%20memesan%20sayuran%20hidroponik." 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="group flex items-center gap-3 text-xs font-semibold tracking-widest text-[#004D40] transition-colors hover:text-[#008060]"
+          >
             PESAN SEKARANG
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-2" />
-          </Link>
+          </a>
         </motion.div>
 
         <div className="grid grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-3">

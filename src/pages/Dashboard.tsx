@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { 
   Home, 
@@ -9,6 +10,9 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
+import { auth, db } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+
 // Dashboard Views
 import { DashboardHome } from "./dashboard/DashboardHome";
 import { DashboardKebun } from "./dashboard/DashboardKebun";
@@ -17,6 +21,34 @@ import { DashboardPengaturan } from "./dashboard/DashboardPengaturan";
 
 export function Dashboard() {
   const location = useLocation();
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserData(docSnap.data());
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+    
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchUserData();
+      } else {
+        setUserData(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location.pathname]);
 
   const navItems = [
     { name: "Beranda", icon: Home, path: "/dashboard" },
@@ -30,9 +62,13 @@ export function Dashboard() {
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-100 flex flex-col hidden md:flex">
         <div className="p-6 flex items-center gap-3 border-b border-gray-50">
-          <img src="/logo-hijau.webp" alt="Pipo Hydro" className="h-8" />
-          <span className="text-sm font-bold tracking-widest text-[#004D40]">
-            PIPO HYDRO
+          {userData?.logoUrl ? (
+            <img src={userData.logoUrl} alt="Logo" className="h-8 w-8 rounded-full object-cover" />
+          ) : (
+            <img src="/logo-hijau.webp" alt="Pipo Hydro" className="h-8" />
+          )}
+          <span className="text-sm font-bold tracking-widest text-[#004D40] line-clamp-1 truncate">
+            {userData?.farmName || "PIPO HYDRO"}
           </span>
         </div>
 
@@ -83,11 +119,15 @@ export function Dashboard() {
             </button>
             <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#424242]">Petani Mandiri</p>
+                <p className="text-sm font-semibold text-[#424242]">{userData?.managerName || "Owner"}</p>
                 <p className="text-xs text-gray-500">Pemilik Kebun</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-[#008060]/10 flex items-center justify-center text-[#008060] font-bold">
-                PM
+              <div className="h-10 w-10 rounded-full bg-[#008060]/10 flex items-center justify-center text-[#008060] font-bold overflow-hidden">
+                {userData?.logoUrl ? (
+                  <img src={userData.logoUrl} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  (userData?.managerName ? userData.managerName.charAt(0).toUpperCase() : "PM")
+                )}
               </div>
             </div>
           </div>

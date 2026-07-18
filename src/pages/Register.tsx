@@ -8,7 +8,6 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 export function Register() {
   const navigate = useNavigate();
-  const [role, setRole] = useState<"petani" | "customer" | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,22 +32,15 @@ export function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!role) {
-      setError("Silakan pilih peran Anda terlebih dahulu (Petani atau Pembeli).");
-      return;
-    }
     setError("");
     setLoading(true);
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       try {
-        await saveUserRole(userCredential.user.uid, role, userCredential.user.email);
-        if (role === "petani") {
-          navigate("/dashboard");
-        } else {
-          navigate("/pembeli");
-        }
+        await saveUserRole(userCredential.user.uid, "petani", userCredential.user.email);
+        navigate("/dashboard");
       } catch (dbError: any) {
         if (dbError.message === "offline") {
           setError("Akun berhasil dibuat, namun gagal menyimpan peran karena database offline.");
@@ -66,33 +58,20 @@ export function Register() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!role) {
-      setError("Silakan pilih peran Anda terlebih dahulu (Petani atau Pembeli).");
-      return;
-    }
     setError("");
     setLoading(true);
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
       
-      // Check if user already exists
       try {
         const userDoc = await getDoc(doc(db, "users", result.user.uid));
-        let currentRole = role;
         
-        if (userDoc.exists()) {
-          // If they already exist, use their existing role instead of overwriting
-          currentRole = userDoc.data().role;
-        } else {
-          // Only save role if this is a new user
-          await saveUserRole(result.user.uid, role, result.user.email);
+        if (!userDoc.exists()) {
+          await saveUserRole(result.user.uid, "petani", result.user.email);
         }
         
-        if (currentRole === "petani") {
-          navigate("/dashboard");
-        } else {
-          navigate("/pembeli");
-        }
+        navigate("/dashboard");
       } catch (dbError: any) {
         console.error("Database error during Google sign-in:", dbError);
         if (dbError.message && dbError.message.includes("client is offline")) {
@@ -112,7 +91,6 @@ export function Register() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#008060]/10 rounded-full blur-3xl -mr-40 -mt-40 mix-blend-multiply pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#4ADE80]/10 rounded-full blur-3xl -ml-20 -mb-20 mix-blend-multiply pointer-events-none" />
 
@@ -138,36 +116,11 @@ export function Register() {
           </div>
 
           <h2 className="text-2xl font-light text-center text-[#424242] mb-2">
-            Buat Akun Baru
+            Buat Akun Petani
           </h2>
           <p className="text-sm font-light text-center text-gray-500 mb-8">
-            Pilih peran Anda dan daftar untuk memulai
+            Daftar untuk mengelola kebun hidroponik Anda
           </p>
-
-          <div className="flex gap-4 mb-8">
-            <button
-              type="button"
-              onClick={() => setRole("petani")}
-              className={`flex-1 py-3 text-xs font-semibold tracking-widest rounded-full transition-all duration-300 ${
-                role === "petani"
-                  ? "bg-[#004D40] text-white shadow-md"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
-            >
-              PETANI
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("customer")}
-              className={`flex-1 py-3 text-xs font-semibold tracking-widest rounded-full transition-all duration-300 ${
-                role === "customer"
-                  ? "bg-[#004D40] text-white shadow-md"
-                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
-            >
-              PEMBELI
-            </button>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
@@ -175,6 +128,7 @@ export function Register() {
                 {error}
               </div>
             )}
+
             <div>
               <div className="relative flex items-center">
                 <User className="absolute left-4 h-5 w-5 text-gray-400" />
@@ -182,12 +136,13 @@ export function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={role === "petani" ? "Email Petani" : "Email Pembeli"}
+                  placeholder="Email"
                   className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#008060] focus:ring-1 focus:ring-[#008060] transition-colors"
                   required
                 />
               </div>
             </div>
+
             <div>
               <div className="relative flex items-center">
                 <Lock className="absolute left-4 h-5 w-5 text-gray-400" />
@@ -205,7 +160,7 @@ export function Register() {
 
             <button
               type="submit"
-              disabled={loading || !role}
+              disabled={loading}
               className="group flex w-full items-center justify-center gap-3 bg-[#008060] px-8 py-4 text-sm font-semibold tracking-widest text-white transition-all hover:bg-[#004D40] rounded-2xl shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? "MEMPROSES..." : "DAFTAR SEKARANG"}
@@ -222,7 +177,7 @@ export function Register() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            disabled={loading || !role}
+            disabled={loading}
             className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-8 py-4 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 hover:border-gray-300 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5">

@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { 
   TrendingUp, 
   Droplets, 
   ThermometerSun, 
   Leaf,
-  Activity
+  Activity,
+  X
 } from "lucide-react";
 
 export function DashboardHome() {
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
   const stats = [
     { label: "Total Tanaman Aktif", value: "4.250", icon: Leaf, color: "text-[#4ADE80]", bg: "bg-[#4ADE80]/10" },
     { label: "Estimasi Panen (Kg)", value: "125", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -15,7 +19,7 @@ export function DashboardHome() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
@@ -67,18 +71,113 @@ export function DashboardHome() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <h3 className="text-lg font-semibold text-[#424242] mb-6">Aksi Cepat</h3>
           <div className="space-y-3">
-            <button className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700">
+            <button 
+              onClick={() => setActiveModal('semai')}
+              className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700"
+            >
               + Catat Masa Semai Baru
             </button>
-            <button className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700">
+            <button 
+              onClick={() => setActiveModal('panen')}
+              className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700"
+            >
               + Input Data Panen
             </button>
-            <button className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700">
+            <button 
+              onClick={() => setActiveModal('transaksi')}
+              className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-[#008060] hover:bg-[#008060]/5 transition-all text-sm font-medium text-gray-700"
+            >
               + Transaksi Penjualan Baru
             </button>
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {activeModal === 'semai' && 'Catat Masa Semai Baru'}
+                {activeModal === 'panen' && 'Input Data Panen'}
+                {activeModal === 'transaksi' && 'Transaksi Penjualan Baru'}
+              </h3>
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {activeModal === 'semai' && (
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setActiveModal(null); }}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Varietas / Nama Tanaman</label>
+                    <input type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Misal: Selada Sementel, Pakcoy, dll" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah Benih (Tray)</label>
+                    <input type="number" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Contoh: 10" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Semai</label>
+                    <input type="date" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" />
+                  </div>
+                  <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-2">Simpan Data</button>
+                </form>
+              )}
+              
+              {activeModal === 'panen' && (
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setActiveModal(null); }}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Lokasi Meja / Blok</label>
+                    <input type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Misal: Meja 1, Area A, dll" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Hasil Panen (Kg)</label>
+                    <input type="number" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Contoh: 25.5" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kualitas</label>
+                    <select className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]">
+                      <option>Grade A (Premium)</option>
+                      <option>Grade B (Standar)</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-2">Simpan Data Panen</button>
+                </form>
+              )}
+              
+              {activeModal === 'transaksi' && (
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setActiveModal(null); }}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Pembeli</label>
+                    <input type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Nama pelanggan / toko" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Tanaman</label>
+                      <input type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="Jenis tanaman" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah (Kg)</label>
+                      <input type="number" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="0" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Harga (Rp)</label>
+                    <input type="number" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" placeholder="0" />
+                  </div>
+                  <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-2">Catat Transaksi</button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
