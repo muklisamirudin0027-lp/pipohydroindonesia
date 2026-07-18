@@ -28,23 +28,23 @@ export function FeaturedProducts() {
   ];
 
   return (
-    <section className="bg-[#FAFAFA] py-32" id="our-produce">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section className="bg-[#FAFAFA] py-16 sm:py-24 lg:py-32" id="our-produce">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-20 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end"
+          className="mb-12 sm:mb-20 flex flex-col items-start justify-between gap-6 sm:gap-8 md:flex-row md:items-end"
         >
           <div>
             <div className="mb-4 flex items-center gap-4">
               <span className="h-px w-8 bg-[#008060]"></span>
-              <span className="text-xs font-semibold tracking-[0.2em] text-[#008060]">
+              <span className="text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#008060]">
                 PRODUK KAMI
               </span>
             </div>
-            <h2 className="text-4xl font-light tracking-tight text-[#424242] sm:text-5xl">
+            <h2 className="text-3xl font-light tracking-tight text-[#424242] sm:text-4xl lg:text-5xl">
               Hasil Panen <br />
               <span className="font-semibold text-[#004D40]">Terbaik.</span>
             </h2>
@@ -61,7 +61,7 @@ export function FeaturedProducts() {
           </a>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-x-12 gap-y-16 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:gap-x-12 sm:gap-y-16 md:grid-cols-3">
           {products.map((product, index) => (
             <motion.div
               key={product.id}
@@ -71,7 +71,7 @@ export function FeaturedProducts() {
               transition={{ duration: 0.8, delay: index * 0.15, ease: "easeOut" }}
               className="group cursor-pointer"
             >
-              <div className="mb-8 overflow-hidden bg-gray-100 aspect-[3/4] rounded-2xl">
+              <div className="mb-6 sm:mb-8 overflow-hidden bg-gray-100 aspect-[4/5] sm:aspect-[3/4] rounded-2xl">
                 <img
                   src={product.image}
                   alt={product.title}

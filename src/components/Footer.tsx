@@ -3,8 +3,8 @@ import { Facebook, Instagram, Linkedin, MapPin, Phone, Mail } from "lucide-react
 export function Footer() {
   return (
     <footer className="bg-[#0b1c17] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-24 lg:px-8">
-        <div className="grid grid-cols-1 gap-16 md:grid-cols-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-24 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 sm:gap-16 md:grid-cols-4">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-3 mb-6">
@@ -89,7 +89,7 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="mt-24 flex flex-col items-center justify-between border-t border-white/10 pt-8 gap-4 md:flex-row">
+        <div className="mt-16 sm:mt-24 flex flex-col items-center justify-between border-t border-white/10 pt-8 gap-4 md:flex-row text-center md:text-left">
           <p className="text-xs font-light text-gray-500">
             &copy; {new Date().getFullYear()} Pipo Hydro Indonesia. Hak Cipta Dilindungi.
           </p>

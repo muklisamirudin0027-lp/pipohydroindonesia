@@ -2,15 +2,15 @@ import { motion } from "motion/react";
 
 export function AboutUs() {
   return (
-    <section id="about-us" className="bg-[#FAFAFA] py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
+    <section id="about-us" className="bg-[#FAFAFA] py-16 sm:py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 sm:gap-16 lg:grid-cols-2 lg:items-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="order-2 lg:order-1 relative aspect-square overflow-hidden group rounded-2xl"
+            className="order-2 lg:order-1 relative aspect-[4/5] sm:aspect-square overflow-hidden group rounded-2xl"
           >
             <img
               src="https://images.unsplash.com/photo-1595806653240-5e36502283eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
@@ -29,15 +29,15 @@ export function AboutUs() {
           >
             <div className="mb-4 flex items-center gap-4">
               <span className="h-px w-8 bg-[#008060]"></span>
-              <span className="text-xs font-semibold tracking-[0.2em] text-[#008060]">
+              <span className="text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#008060]">
                 CERITA KAMI
               </span>
             </div>
-            <h2 className="mb-8 text-4xl font-light tracking-tight text-[#424242] sm:text-5xl">
+            <h2 className="mb-6 sm:mb-8 text-3xl font-light tracking-tight text-[#424242] sm:text-4xl lg:text-5xl">
               Berawal dari <br />
               <span className="font-semibold text-[#004D40]">Kopi & Inovasi.</span>
             </h2>
-            <div className="space-y-6 text-base font-light leading-relaxed text-gray-600">
+            <div className="space-y-4 sm:space-y-6 text-sm sm:text-base font-light leading-relaxed text-gray-600">
               <p>
                 Bermula dari obrolan santai sambil ngopi bersama teman-teman, kami menyadari sebuah peluang besar. Kami ingin mematahkan stigma bahwa bertani harus selalu di lahan persawahan yang luas.
               </p>

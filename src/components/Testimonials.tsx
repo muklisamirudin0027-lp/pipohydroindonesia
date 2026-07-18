@@ -31,28 +31,28 @@ export function Testimonials() {
   }, []);
 
   return (
-    <section className="bg-white py-32 border-y border-gray-100 relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+    <section className="bg-white py-16 sm:py-24 lg:py-32 border-y border-gray-100 relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16 text-center"
+          className="mb-12 sm:mb-16 text-center"
         >
-          <div className="mb-4 flex items-center justify-center gap-4">
-            <span className="h-px w-8 bg-[#008060]"></span>
-            <span className="text-xs font-semibold tracking-[0.2em] text-[#008060]">
+          <div className="mb-4 flex items-center justify-center gap-2 sm:gap-4">
+            <span className="h-px w-6 sm:w-8 bg-[#008060]"></span>
+            <span className="text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-[#008060]">
               TESTIMONI
             </span>
-            <span className="h-px w-8 bg-[#008060]"></span>
+            <span className="h-px w-6 sm:w-8 bg-[#008060]"></span>
           </div>
           <h2 className="text-3xl font-light tracking-tight text-[#424242] sm:text-4xl">
             Apa Kata <span className="font-semibold text-[#004D40]">Pelanggan Kami</span>
           </h2>
         </motion.div>
 
-        <div className="relative mx-auto max-w-4xl h-[280px] sm:h-[200px] flex items-center justify-center">
+        <div className="relative mx-auto max-w-4xl h-[320px] sm:h-[200px] flex items-center justify-center">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={index}
@@ -65,8 +65,8 @@ export function Testimonials() {
               }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             >
-              <Quote className="h-10 w-10 text-[#008060]/20 mb-6" />
-              <p className="text-xl md:text-2xl font-light leading-relaxed text-gray-700 italic mb-8">
+              <Quote className="h-8 w-8 sm:h-10 sm:w-10 text-[#008060]/20 mb-4 sm:mb-6" />
+              <p className="text-lg sm:text-xl md:text-2xl font-light leading-relaxed text-gray-700 italic mb-6 sm:mb-8">
                 "{testimonial.quote}"
               </p>
               <div>
@@ -92,8 +92,8 @@ export function Testimonials() {
       </div>
       
       {/* Decorative background element */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-[#008060]/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 rounded-full bg-[#4ADE80]/5 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 sm:w-96 h-64 sm:h-96 rounded-full bg-[#008060]/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 sm:w-96 h-64 sm:h-96 rounded-full bg-[#4ADE80]/5 blur-3xl pointer-events-none" />
     </section>
   );
 }

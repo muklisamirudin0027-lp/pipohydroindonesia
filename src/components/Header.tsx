@@ -38,15 +38,15 @@ export function Header() {
         isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className={`mx-auto flex h-24 max-w-7xl items-center justify-between px-6 lg:px-8 border-b transition-colors duration-300 ${isScrolled ? "border-transparent" : "border-white/20"}`}>
+      <div className={`mx-auto flex h-20 sm:h-24 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 border-b transition-colors duration-300 ${isScrolled ? "border-transparent" : "border-white/20"}`}>
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img 
             src={isScrolled ? "/logo-hijau.webp" : "/logo-putih.webp"} 
             alt="Pipo Hydro Indonesia Logo" 
-            className="h-10 w-auto object-contain transition-all duration-300"
+            className="h-8 sm:h-10 w-auto object-contain transition-all duration-300"
           />
-          <span className={`text-sm md:text-lg font-bold tracking-widest transition-colors duration-300 ${isScrolled ? "text-[#004D40]" : "text-white"}`}>
+          <span className={`text-xs sm:text-sm md:text-lg font-bold tracking-widest transition-colors duration-300 ${isScrolled ? "text-[#004D40]" : "text-white"}`}>
             PIPO HYDRO INDONESIA
           </span>
         </div>
@@ -72,7 +72,7 @@ export function Header() {
         <div className="flex items-center">
           <Link 
             to={isLoggedIn ? "/dashboard" : "/login"}
-            className={`flex items-center gap-3 border px-6 py-3 text-xs font-semibold tracking-widest transition-all duration-300 rounded-full ${
+            className={`flex items-center gap-2 sm:gap-3 border px-4 sm:px-6 py-2 sm:py-3 text-[10px] sm:text-xs font-semibold tracking-widest transition-all duration-300 rounded-full ${
             isScrolled
               ? "border-[#004D40] bg-[#004D40] text-white hover:bg-[#008060] hover:border-[#008060] shadow-md"
               : "border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white hover:text-[#004D40]"
