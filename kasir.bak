@@ -1,0 +1,504 @@
+import { useState, useEffect } from "react";
+import { ShoppingBag, Receipt, ArrowDownRight, ArrowUpRight, X, Printer, CheckCircle2, FileText } from "lucide-react";
+
+interface SiklusTanam {
+  id: string;
+  varietasName: string;
+  tanggalSemai: string;
+  tanggalPindahTanam?: string;
+  tanggalPanen?: string;
+  hasilKg?: number;
+}
+
+interface Transaction {
+  id: string;
+  type: string;
+  customer: string;
+  amount: string;
+  date: string;
+  status: 'Masuk' | 'Keluar';
+  items?: { name: string; qty: number; price: number; total: number }[];
+}
+
+export function DashboardKasir() {
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [selectedStruk, setSelectedStruk] = useState<Transaction | null>(null);
+
+  // States for forms
+  const [kategoriPengeluaran, setKategoriPengeluaran] = useState("Nutrisi / Pupuk");
+  const [keteranganPengeluaran, setKeteranganPengeluaran] = useState("");
+  const [pengeluaranNominal, setPengeluaranNominal] = useState("");
+
+  const [namaPembeli, setNamaPembeli] = useState("");
+  const [jenisTanaman, setJenisTanaman] = useState("");
+  const [penjualanJumlahKg, setPenjualanJumlahKg] = useState("");
+  const [penjualanHargaPerKg, setPenjualanHargaPerKg] = useState("");
+
+  const [availableCrops, setAvailableCrops] = useState<{name: string, stock: number}[]>([]);
+
+  useEffect(() => {
+    // Load transactions
+    const savedTx = localStorage.getItem("pipo_transactions");
+    if (savedTx) {
+      setTransactions(JSON.parse(savedTx));
+    } else {
+      // Default dummy data if empty
+      const initial: Transaction[] = [
+        { id: "INV-001", type: "Penjualan", customer: "Pak Budi (Restoran A)", amount: "Rp 1.500.000", date: "18 Jul 2026, 08:30", status: "Masuk" },
+        { id: "INV-002", type: "Penjualan", customer: "Ibu Siti", amount: "Rp 35.000", date: "18 Jul 2026, 10:15", status: "Masuk" },
+        { id: "INV-003", type: "Listrik / Air", customer: "Bayar Listrik", amount: "Rp 250.000", date: "17 Jul 2026, 09:00", status: "Keluar" },
+      ];
+      setTransactions(initial);
+      localStorage.setItem("pipo_transactions", JSON.stringify(initial));
+    }
+
+    // Load harvested crops for Penjualan
+    const savedSiklus = localStorage.getItem("pipo_siklus");
+    if (savedSiklus) {
+      const parsedSiklus: SiklusTanam[] = JSON.parse(savedSiklus);
+      const stockMap = new Map<string, number>();
+      parsedSiklus.forEach(siklus => {
+        if (siklus.tanggalPanen && siklus.hasilKg) {
+          const current = stockMap.get(siklus.varietasName) || 0;
+          stockMap.set(siklus.varietasName, current + siklus.hasilKg);
+        }
+      });
+      
+      const crops = Array.from(stockMap.entries()).map(([name, stock]) => ({ name, stock }));
+      setAvailableCrops(crops);
+      if (crops.length > 0 && !jenisTanaman) {
+        setJenisTanaman(crops[0].name);
+      }
+    }
+  }, [activeModal]);
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const formatNumber = (value: string) => {
+    const number = value.replace(/\D/g, "");
+    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const calculateTotalPenjualan = () => {
+    const jumlah = parseFloat(penjualanJumlahKg) || 0;
+    const harga = parseInt(penjualanHargaPerKg.replace(/\./g, "")) || 0;
+    return formatNumber((jumlah * harga).toString());
+  };
+
+  // Kalkulasi total
+  const totalPendapatan = transactions
+    .filter(t => t.status === 'Masuk')
+    .reduce((sum, t) => sum + parseInt(t.amount.replace(/\D/g, "")), 0);
+    
+  const totalPengeluaran = transactions
+    .filter(t => t.status === 'Keluar')
+    .reduce((sum, t) => sum + parseInt(t.amount.replace(/\D/g, "")), 0);
+    
+  const labaBersih = totalPendapatan - totalPengeluaran;
+
+  const handlePengeluaranSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!keteranganPengeluaran || !pengeluaranNominal) return;
+
+    const newTx: Transaction = {
+      id: `TRX-${Date.now().toString().slice(-4)}`,
+      type: kategoriPengeluaran,
+      customer: keteranganPengeluaran,
+      amount: `Rp ${pengeluaranNominal}`,
+      date: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      status: 'Keluar'
+    };
+
+    const updated = [newTx, ...transactions];
+    setTransactions(updated);
+    localStorage.setItem("pipo_transactions", JSON.stringify(updated));
+
+    setToastMessage("Pengeluaran berhasil dicatat");
+    setActiveModal(null);
+    setKeteranganPengeluaran("");
+    setPengeluaranNominal("");
+  };
+
+  const handlePenjualanSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!namaPembeli || !jenisTanaman || !penjualanJumlahKg || !penjualanHargaPerKg) return;
+
+    const totalStr = calculateTotalPenjualan();
+    const newTx: Transaction = {
+      id: `INV-${Date.now().toString().slice(-4)}`,
+      type: 'Penjualan',
+      customer: namaPembeli,
+      amount: `Rp ${totalStr}`,
+      date: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      status: 'Masuk',
+      items: [{
+        name: jenisTanaman,
+        qty: parseFloat(penjualanJumlahKg),
+        price: parseInt(penjualanHargaPerKg.replace(/\./g, "")),
+        total: parseInt(totalStr.replace(/\./g, ""))
+      }]
+    };
+
+    const updated = [newTx, ...transactions];
+    setTransactions(updated);
+    localStorage.setItem("pipo_transactions", JSON.stringify(updated));
+
+    setActiveModal("struk");
+    setSelectedStruk(newTx);
+    setToastMessage("Penjualan berhasil dicatat");
+
+    setNamaPembeli("");
+    setPenjualanJumlahKg("");
+    setPenjualanHargaPerKg("");
+  };
+
+  return (
+    <div className="p-8 pb-24 overflow-y-auto h-full space-y-8 relative">
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-green-50 text-green-700 px-4 py-3 rounded-xl shadow-lg border border-green-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+          <CheckCircle2 className="h-5 w-5" />
+          <span className="font-medium text-sm">{toastMessage}</span>
+        </div>
+      )}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Kasir & Keuangan</h1>
+          <p className="text-gray-500 mt-1">Catat transaksi penjualan dan pengeluaran operasional.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => setActiveModal('pengeluaran')}
+            className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+          >
+            <Receipt className="h-4 w-4" />
+            Catat Pengeluaran
+          </button>
+          <button 
+            onClick={() => setActiveModal('penjualan')}
+            className="flex items-center justify-center gap-2 bg-[#008060] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#004D40] transition-colors"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Transaksi Baru
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <p className="text-sm font-semibold text-gray-500 mb-2">Total Pendapatan</p>
+          <h3 className="text-3xl font-light text-[#424242]">Rp {formatNumber(totalPendapatan.toString())}</h3>
+          <p className="text-sm text-green-500 mt-2 flex items-center gap-1 font-medium">
+            <ArrowUpRight className="h-4 w-4" /> Pemasukan kas
+          </p>
+        </div>
+        
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <p className="text-sm font-semibold text-gray-500 mb-2">Total Pengeluaran</p>
+          <h3 className="text-3xl font-light text-[#424242]">Rp {formatNumber(totalPengeluaran.toString())}</h3>
+          <p className="text-sm text-red-500 mt-2 flex items-center gap-1 font-medium">
+            <ArrowDownRight className="h-4 w-4" /> Operasional kebun
+          </p>
+        </div>
+
+        <div className="bg-[#004D40] rounded-2xl p-6 shadow-sm text-white">
+          <p className="text-sm font-semibold text-gray-300 mb-2">Laba Bersih</p>
+          <h3 className="text-3xl font-light">Rp {formatNumber(labaBersih.toString())}</h3>
+          <p className="text-sm text-[#4ADE80] mt-2 flex items-center gap-1 font-medium">
+            <ArrowUpRight className="h-4 w-4" /> Keuntungan saat ini
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[#424242]">Riwayat Transaksi</h3>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600">
+            <thead className="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
+              <tr>
+                <th className="px-6 py-4">ID Transaksi</th>
+                <th className="px-6 py-4">Keterangan / Pelanggan</th>
+                <th className="px-6 py-4">Tanggal</th>
+                <th className="px-6 py-4">Tipe</th>
+                <th className="px-6 py-4 text-right">Nominal</th>
+                <th className="px-6 py-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {transactions.map((item, idx) => (
+                <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
+                  <td className="px-6 py-4">{item.customer}</td>
+                  <td className="px-6 py-4">{item.date}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      item.status === 'Keluar' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                    }`}>
+                      {item.type}
+                    </span>
+                  </td>
+                  <td className={`px-6 py-4 text-right font-medium ${item.status === 'Keluar' ? 'text-red-600' : 'text-green-600'}`}>
+                    {item.status === 'Keluar' ? '-' : '+'}{item.amount}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {item.items && item.items.length > 0 && (
+                      <button 
+                        onClick={() => {
+                          setSelectedStruk(item);
+                          setActiveModal("struk");
+                        }}
+                        className="text-gray-500 hover:text-[#008060] transition-colors"
+                        title="Lihat Struk"
+                      >
+                        <FileText className="h-5 w-5 inline" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {transactions.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    Belum ada transaksi yang dicatat.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {activeModal === 'pengeluaran' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Catat Pengeluaran</h3>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <form className="space-y-4" onSubmit={handlePengeluaranSubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Pengeluaran</label>
+                  <select 
+                    value={kategoriPengeluaran}
+                    onChange={(e) => setKategoriPengeluaran(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]"
+                    required
+                  >
+                    <option>Nutrisi / Pupuk</option>
+                    <option>Peralatan (Netpot, dll)</option>
+                    <option>Listrik / Air</option>
+                    <option>Lainnya</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+                  <input 
+                    type="text" 
+                    value={keteranganPengeluaran}
+                    onChange={(e) => setKeteranganPengeluaran(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                    placeholder="Misal: Beli Nutrisi AB Mix 5L" 
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp)</label>
+                  <input 
+                    type="text" 
+                    value={pengeluaranNominal}
+                    onChange={(e) => setPengeluaranNominal(formatNumber(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                    placeholder="0" 
+                    required
+                  />
+                </div>
+                <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-2">
+                  Simpan Pengeluaran
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === 'penjualan' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Transaksi Penjualan Baru</h3>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <form className="space-y-4" onSubmit={handlePenjualanSubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nama Pembeli</label>
+                  <input 
+                    type="text" 
+                    value={namaPembeli}
+                    onChange={(e) => setNamaPembeli(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                    placeholder="Nama pelanggan / toko" 
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Tanaman</label>
+                    <select 
+                      value={jenisTanaman}
+                      onChange={(e) => setJenisTanaman(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]"
+                      required
+                    >
+                      {availableCrops.length > 0 ? (
+                        availableCrops.map((crop, i) => (
+                          <option key={i} value={crop.name}>{crop.name} (Stok: {crop.stock} kg)</option>
+                        ))
+                      ) : (
+                        <option value="" disabled>Belum ada panen</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah (Kg)</label>
+                    <input 
+                      type="number" 
+                      step="0.1" 
+                      value={penjualanJumlahKg}
+                      onChange={(e) => setPenjualanJumlahKg(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                      placeholder="0.0" 
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Harga per Kg (Rp)</label>
+                    <input 
+                      type="text" 
+                      value={penjualanHargaPerKg}
+                      onChange={(e) => setPenjualanHargaPerKg(formatNumber(e.target.value))}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                      placeholder="0" 
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Harga (Rp)</label>
+                    <input 
+                      type="text" 
+                      value={calculateTotalPenjualan()}
+                      readOnly
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium text-[#008060] focus:outline-none" 
+                      placeholder="0" 
+                    />
+                  </div>
+                </div>
+                <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-2">
+                  Catat Penjualan
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Struk */}
+      {activeModal === 'struk' && selectedStruk && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6">
+              {/* Receipt Content */}
+              <div id="receipt-content" className="font-mono text-sm text-gray-800">
+                <div className="text-center mb-4">
+                  <h2 className="text-lg font-bold">PIPO HYDROFARM</h2>
+                  <p className="text-xs text-gray-500">Jl. Pertanian Modern No.1</p>
+                  <p className="text-xs text-gray-500">0812-3456-7890</p>
+                </div>
+                
+                <div className="border-b border-dashed border-gray-300 pb-2 mb-2">
+                  <div className="flex justify-between">
+                    <span>Tgl:</span>
+                    <span>{selectedStruk.date}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>No :</span>
+                    <span>{selectedStruk.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Plg:</span>
+                    <span className="text-right truncate ml-4">{selectedStruk.customer}</span>
+                  </div>
+                </div>
+
+                <div className="border-b border-dashed border-gray-300 pb-2 mb-2 min-h-[60px]">
+                  {selectedStruk.items?.map((item, i) => (
+                    <div key={i} className="mb-2">
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="flex justify-between text-gray-600 text-xs">
+                        <span>{item.qty} kg x Rp {formatNumber(item.price.toString())}</span>
+                        <span>Rp {formatNumber(item.total.toString())}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between font-bold text-base mt-2">
+                  <span>TOTAL</span>
+                  <span>{selectedStruk.amount}</span>
+                </div>
+                
+                <div className="text-center mt-6 text-xs text-gray-500">
+                  <p>Terima kasih atas kunjungannya</p>
+                  <p>Sayur Sehat Keluarga Hebat</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 border-t border-gray-100 flex gap-3">
+              <button 
+                onClick={() => setActiveModal(null)}
+                className="flex-1 bg-white border border-gray-200 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Tutup
+              </button>
+              <button 
+                onClick={() => {
+                  window.print();
+                }}
+                className="flex-1 bg-[#008060] text-white py-2 rounded-lg font-medium hover:bg-[#00664d] transition-colors flex items-center justify-center gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Cetak Struk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

@@ -10,6 +10,7 @@ export function Register() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("admin");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,11 +23,19 @@ export function Register() {
       });
       return true;
     } catch (e: any) {
-      console.error("Error saving user role:", e);
-      if (e.message && e.message.includes("client is offline")) {
+      const isOffline = e instanceof Error && (
+        e.message.toLowerCase().includes("offline") || 
+        e.message.toLowerCase().includes("could not reach") || 
+        e.message.toLowerCase().includes("network") || 
+        e.message.toLowerCase().includes("unavailable")
+      );
+      if (isOffline) {
+        console.warn("Error saving user role (client is offline):", e.message || e);
         throw new Error("offline");
+      } else {
+        console.error("Error saving user role:", e);
+        throw e;
       }
-      throw e;
     }
   };
 
@@ -39,7 +48,7 @@ export function Register() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       try {
-        await saveUserRole(userCredential.user.uid, "petani", userCredential.user.email);
+        await saveUserRole(userCredential.user.uid, role, userCredential.user.email);
         navigate("/dashboard");
       } catch (dbError: any) {
         if (dbError.message === "offline") {
@@ -50,8 +59,14 @@ export function Register() {
         await auth.signOut();
       }
     } catch (err: any) {
-      setError("Gagal mendaftar. Email mungkin sudah terdaftar atau kata sandi terlalu lemah.");
-      console.error(err);
+      if (err.code === "auth/network-request-failed") {
+        setError("Gagal terhubung. Periksa koneksi internet Anda.");
+      } else if (err.code === "auth/email-already-in-use") {
+        setError("Email sudah terdaftar.");
+      } else {
+        setError("Gagal mendaftar. Email mungkin sudah terdaftar atau kata sandi terlalu lemah.");
+      }
+      console.warn(err);
     } finally {
       setLoading(false);
     }
@@ -68,22 +83,33 @@ export function Register() {
         const userDoc = await getDoc(doc(db, "users", result.user.uid));
         
         if (!userDoc.exists()) {
-          await saveUserRole(result.user.uid, "petani", result.user.email);
+          await saveUserRole(result.user.uid, role, result.user.email);
         }
         
         navigate("/dashboard");
       } catch (dbError: any) {
-        console.error("Database error during Google sign-in:", dbError);
-        if (dbError.message && dbError.message.includes("client is offline")) {
+        const isOffline = dbError instanceof Error && (
+          dbError.message.toLowerCase().includes("offline") || 
+          dbError.message.toLowerCase().includes("could not reach") || 
+          dbError.message.toLowerCase().includes("network") || 
+          dbError.message.toLowerCase().includes("unavailable")
+        );
+        if (isOffline) {
+          console.warn("Database error during Google sign-in (client is offline):", dbError.message || dbError);
           setError("Pendaftaran berhasil, tetapi gagal menyimpan peran karena database offline. Silakan coba lagi nanti.");
         } else {
+          console.warn("Database error during Google sign-in:", dbError);
           setError("Gagal memproses data pengguna: " + dbError.message);
         }
         await auth.signOut();
       }
     } catch (err: any) {
-      setError("Gagal mendaftar dengan Google.");
-      console.error(err);
+      if (err.code === "auth/network-request-failed") {
+        setError("Gagal terhubung. Periksa koneksi internet Anda.");
+      } else {
+        setError("Gagal mendaftar dengan Google.");
+      }
+      console.warn(err);
     } finally {
       setLoading(false);
     }
@@ -116,10 +142,10 @@ export function Register() {
           </div>
 
           <h2 className="text-2xl font-light text-center text-[#424242] mb-2">
-            Buat Akun Petani
+            Buat Akun Baru
           </h2>
           <p className="text-sm font-light text-center text-gray-500 mb-8">
-            Daftar untuk mengelola kebun hidroponik Anda
+            Daftar sebagai Administrator Website atau Petani Hidroponik
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -128,6 +154,18 @@ export function Register() {
                 {error}
               </div>
             )}
+
+            <div>
+              <label className="block text-[10px] font-black tracking-wider text-gray-400 uppercase mb-2">Pilih Peran Akun (Role)</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:outline-none focus:border-[#008060] transition-colors font-medium text-gray-700"
+              >
+                <option value="admin">Administrator Website (CMS & Akun)</option>
+                <option value="petani">Petani Hidroponik (Kebun & Kasir)</option>
+              </select>
+            </div>
 
             <div>
               <div className="relative flex items-center">

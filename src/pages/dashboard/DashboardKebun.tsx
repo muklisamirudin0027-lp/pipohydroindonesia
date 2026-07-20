@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Leaf, Search, Plus, X, Sprout, CalendarDays, Trash2 } from "lucide-react";
+import { Leaf, Search, Plus, X, Sprout, CalendarDays, Trash2, AlertTriangle, HelpCircle } from "lucide-react";
 
 interface Varietas {
   id: string;
@@ -13,12 +13,20 @@ interface SiklusTanam {
   jumlah: number;
   tanggalSemai: string;
   tanggalPindahTanam: string;
+  tanggalPanen?: string;
+  hasilKg?: number;
 }
 
 export function DashboardKebun() {
   const [activeTab, setActiveTab] = useState<"siklus" | "varietas">("siklus");
-  const [activeModal, setActiveModal] = useState<"siklus" | "varietas" | "pindahTanam" | null>(null);
+  const [activeModal, setActiveModal] = useState<"siklus" | "varietas" | "pindahTanam" | "panen" | null>(null);
   const [selectedSiklusId, setSelectedSiklusId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: "delete" | "save";
+  } | null>(null);
 
   // States
   const [varietasList, setVarietasList] = useState<Varietas[]>([]);
@@ -41,6 +49,12 @@ export function DashboardKebun() {
     tanggalPindahTanam: new Date().toISOString().split('T')[0],
     meja: "",
     jumlah: ""
+  });
+
+  // Form states for Panen
+  const [formPanen, setFormPanen] = useState({
+    tanggalPanen: new Date().toISOString().split('T')[0],
+    hasilKg: ""
   });
 
   // Load from localStorage on mount
@@ -110,69 +124,148 @@ export function DashboardKebun() {
     e.preventDefault();
     if (!newVarietasName.trim()) return;
     
-    const newVar = { id: Date.now().toString(), name: newVarietasName };
-    saveVarietas([...varietasList, newVar]);
-    setNewVarietasName("");
-    setActiveModal(null);
+    setConfirmDialog({
+      title: "Simpan Varietas Baru",
+      message: `Apakah Anda yakin ingin menyimpan varietas "${newVarietasName}" ke daftar?`,
+      type: "save",
+      onConfirm: () => {
+        const newVar = { id: Date.now().toString(), name: newVarietasName.trim() };
+        saveVarietas([...varietasList, newVar]);
+        setNewVarietasName("");
+        setActiveModal(null);
+        setConfirmDialog(null);
+      }
+    });
   };
 
-  const handleDeleteVarietas = (id: string) => {
-    saveVarietas(varietasList.filter(v => v.id !== id));
+  const handleDeleteVarietas = (id: string, name: string) => {
+    setConfirmDialog({
+      title: "Hapus Varietas",
+      message: `Apakah Anda yakin ingin menghapus varietas "${name}"? Tindakan ini akan menghapusnya dari daftar.`,
+      type: "delete",
+      onConfirm: () => {
+        saveVarietas(varietasList.filter(v => v.id !== id));
+        setConfirmDialog(null);
+      }
+    });
   };
 
   const handleAddSiklus = (e: React.FormEvent) => {
     e.preventDefault();
-    const newSiklus = {
-      id: Date.now().toString(),
-      varietasName: formSiklus.varietasName || varietasList[0]?.name || "Tanaman Baru",
-      meja: formSiklus.meja,
-      jumlah: parseInt(formSiklus.jumlah) || 0,
-      tanggalSemai: formSiklus.tanggalSemai,
-      tanggalPindahTanam: formSiklus.tanggalPindahTanam
-    };
-    
-    saveSiklus([newSiklus, ...siklusList]);
-    setFormSiklus({
-      varietasName: varietasList[0]?.name || "",
-      meja: "",
-      jumlah: "",
-      tanggalSemai: new Date().toISOString().split('T')[0],
-      tanggalPindahTanam: ""
+    const varName = formSiklus.varietasName || varietasList[0]?.name || "Tanaman Baru";
+    setConfirmDialog({
+      title: "Simpan Siklus Semaian",
+      message: `Apakah Anda yakin ingin mencatat masa semai baru untuk "${varName}" sebanyak ${formSiklus.jumlah || 0} lubang tanam?`,
+      type: "save",
+      onConfirm: () => {
+        const newSiklus = {
+          id: Date.now().toString(),
+          varietasName: varName,
+          meja: formSiklus.meja,
+          jumlah: parseInt(formSiklus.jumlah) || 0,
+          tanggalSemai: formSiklus.tanggalSemai,
+          tanggalPindahTanam: formSiklus.tanggalPindahTanam
+        };
+        
+        saveSiklus([newSiklus, ...siklusList]);
+        setFormSiklus({
+          varietasName: varietasList[0]?.name || "",
+          meja: "",
+          jumlah: "",
+          tanggalSemai: new Date().toISOString().split('T')[0],
+          tanggalPindahTanam: ""
+        });
+        setActiveModal(null);
+        setConfirmDialog(null);
+      }
     });
-    setActiveModal(null);
   };
 
-  const handleDeleteSiklus = (id: string) => {
-    saveSiklus(siklusList.filter(s => s.id !== id));
+  const handleDeleteSiklus = (id: string, name: string) => {
+    setConfirmDialog({
+      title: "Hapus Siklus Tanam",
+      message: `Apakah Anda yakin ingin menghapus siklus tanam "${name}"? Tindakan ini akan menghapus riwayat siklus ini selamanya.`,
+      type: "delete",
+      onConfirm: () => {
+        saveSiklus(siklusList.filter(s => s.id !== id));
+        setConfirmDialog(null);
+      }
+    });
   };
 
   const handlePindahTanamSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSiklusId) return;
+    const item = siklusList.find(s => s.id === selectedSiklusId);
 
-    const updatedList = siklusList.map(s => {
-      if (s.id === selectedSiklusId) {
-        return {
-          ...s,
-          tanggalPindahTanam: formPindahTanam.tanggalPindahTanam,
-          meja: formPindahTanam.meja,
-          jumlah: parseInt(formPindahTanam.jumlah) || s.jumlah
-        };
+    setConfirmDialog({
+      title: "Konfirmasi Pindah Tanam",
+      message: `Apakah Anda yakin ingin memindahkan tanam siklus "${item?.varietasName || ""}" ke meja "${formPindahTanam.meja || "Utama"}"?`,
+      type: "save",
+      onConfirm: () => {
+        const updatedList = siklusList.map(s => {
+          if (s.id === selectedSiklusId) {
+            return {
+              ...s,
+              tanggalPindahTanam: formPindahTanam.tanggalPindahTanam,
+              meja: formPindahTanam.meja,
+              jumlah: parseInt(formPindahTanam.jumlah) || s.jumlah
+            };
+          }
+          return s;
+        });
+
+        saveSiklus(updatedList);
+        setActiveModal(null);
+        setSelectedSiklusId(null);
+        setFormPindahTanam({
+          tanggalPindahTanam: new Date().toISOString().split('T')[0],
+          meja: "",
+          jumlah: ""
+        });
+        setConfirmDialog(null);
       }
-      return s;
     });
+  };
 
-    saveSiklus(updatedList);
-    setActiveModal(null);
-    setSelectedSiklusId(null);
-    setFormPindahTanam({
-      tanggalPindahTanam: new Date().toISOString().split('T')[0],
-      meja: "",
-      jumlah: ""
+  const handlePanenSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSiklusId) return;
+    const item = siklusList.find(s => s.id === selectedSiklusId);
+
+    setConfirmDialog({
+      title: "Konfirmasi Hasil Panen",
+      message: `Apakah Anda yakin ingin mencatat hasil panen untuk "${item?.varietasName || ""}" sebesar ${formPanen.hasilKg} kg?`,
+      type: "save",
+      onConfirm: () => {
+        const updatedList = siklusList.map(s => {
+          if (s.id === selectedSiklusId) {
+            return {
+              ...s,
+              tanggalPanen: formPanen.tanggalPanen,
+              hasilKg: parseFloat(formPanen.hasilKg) || 0
+            };
+          }
+          return s;
+        });
+
+        saveSiklus(updatedList);
+        setActiveModal(null);
+        setSelectedSiklusId(null);
+        setFormPanen({
+          tanggalPanen: new Date().toISOString().split('T')[0],
+          hasilKg: ""
+        });
+        setConfirmDialog(null);
+      }
     });
   };
 
   const calculatePlantStatus = (siklus: SiklusTanam) => {
+    if (siklus.tanggalPanen) {
+      return { status: "Dipanen", umurText: `${siklus.hasilKg} kg` };
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -262,51 +355,152 @@ export function DashboardKebun() {
         </div>
         
         {activeTab === "siklus" && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
-                <tr>
-                  <th className="px-6 py-4">Varietas</th>
-                  <th className="px-6 py-4">Lokasi / Meja</th>
-                  <th className="px-6 py-4">Jumlah (Lubang)</th>
-                  <th className="px-6 py-4">Umur Real-time</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {siklusList.length === 0 ? (
+          <div>
+            {/* Desktop View Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-gray-50 text-xs uppercase font-semibold text-gray-500">
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      Belum ada siklus tanam aktif.
-                    </td>
+                    <th className="px-6 py-4">Varietas</th>
+                    <th className="px-6 py-4">Lokasi / Meja</th>
+                    <th className="px-6 py-4">Jumlah (Lubang)</th>
+                    <th className="px-6 py-4">Umur Real-time</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Aksi</th>
                   </tr>
-                ) : (
-                  siklusList.map((item) => {
-                    const { status, umurText } = calculatePlantStatus(item);
-                    return (
-                      <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {siklusList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                        Belum ada siklus tanam aktif.
+                      </td>
+                    </tr>
+                  ) : (
+                    siklusList.map((item) => {
+                      const { status, umurText } = calculatePlantStatus(item);
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                              status === 'Persemaian' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
+                            }`}>
+                              {status === 'Persemaian' ? <Sprout className="h-4 w-4" /> : <Leaf className="h-4 w-4" />}
+                            </div>
+                            {item.varietasName}
+                          </td>
+                          <td className="px-6 py-4">{item.meja || "-"}</td>
+                          <td className="px-6 py-4">{item.jumlah}</td>
+                          <td className="px-6 py-4 font-semibold text-[#424242]">{umurText}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              status === 'Dipanen' ? 'bg-gray-100 text-gray-700' :
+                              status === 'Siap Panen' ? 'bg-green-100 text-green-700' :
+                              status === 'Pertumbuhan' ? 'bg-blue-100 text-blue-700' :
+                              'bg-orange-100 text-orange-700'
+                            }`}>
+                              {status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right flex justify-end gap-3 items-center h-full">
+                            {status === 'Persemaian' && (
+                              <button 
+                                onClick={() => {
+                                  setSelectedSiklusId(item.id);
+                                  setFormPindahTanam({
+                                    ...formPindahTanam,
+                                    jumlah: item.jumlah.toString(),
+                                    meja: item.meja || ""
+                                  });
+                                  setActiveModal("pindahTanam");
+                                }} 
+                                className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium transition-colors"
+                              >
+                                Pindah Tanam
+                              </button>
+                            )}
+                            {(status === 'Pertumbuhan' || status === 'Siap Panen') && (
+                              <button 
+                                onClick={() => {
+                                  setSelectedSiklusId(item.id);
+                                  setActiveModal("panen");
+                                }} 
+                                className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded-lg hover:bg-green-100 font-medium transition-colors"
+                              >
+                                Panen
+                              </button>
+                            )}
+                            <button onClick={() => handleDeleteSiklus(item.id, item.varietasName)} className="text-red-500 hover:text-red-700 font-medium text-sm">
+                              <Trash2 className="h-4 w-4 inline" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+              <div className="p-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex gap-4">
+                <span>* HSS = Hari Setelah Semai</span>
+                <span>* HST = Hari Setelah Tanam</span>
+              </div>
+            </div>
+
+            {/* Mobile View Card List */}
+            <div className="block md:hidden p-4 space-y-4">
+              {siklusList.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Belum ada siklus tanam aktif.
+                </div>
+              ) : (
+                siklusList.map((item) => {
+                  const { status, umurText } = calculatePlantStatus(item);
+                  return (
+                    <div key={item.id} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
                           <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
                             status === 'Persemaian' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'
                           }`}>
                             {status === 'Persemaian' ? <Sprout className="h-4 w-4" /> : <Leaf className="h-4 w-4" />}
                           </div>
-                          {item.varietasName}
-                        </td>
-                        <td className="px-6 py-4">{item.meja || "-"}</td>
-                        <td className="px-6 py-4">{item.jumlah}</td>
-                        <td className="px-6 py-4 font-semibold text-[#424242]">{umurText}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            status === 'Siap Panen' ? 'bg-green-100 text-green-700' :
-                            status === 'Pertumbuhan' ? 'bg-blue-100 text-blue-700' :
-                            'bg-orange-100 text-orange-700'
-                          }`}>
-                            {status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right flex justify-end gap-3 items-center h-full">
+                          <span className="font-semibold text-gray-900 text-sm line-clamp-1">{item.varietasName}</span>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide ${
+                          status === 'Dipanen' ? 'bg-gray-100 text-gray-700' :
+                          status === 'Siap Panen' ? 'bg-green-100 text-green-700' :
+                          status === 'Pertumbuhan' ? 'bg-blue-100 text-blue-700' :
+                          'bg-orange-100 text-orange-700'
+                        }`}>
+                          {status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-xs bg-gray-50/50 p-2.5 rounded-xl border border-gray-50 text-gray-500">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Meja</p>
+                          <p className="font-semibold text-gray-700">{item.meja || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Lubang</p>
+                          <p className="font-semibold text-gray-700">{item.jumlah} pcs</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">Umur</p>
+                          <p className="font-bold text-[#008060]">{umurText}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2.5 border-t border-gray-50">
+                        <button 
+                          onClick={() => handleDeleteSiklus(item.id, item.varietasName)} 
+                          className="flex items-center justify-center h-10 w-10 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                          title="Hapus Siklus"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        
+                        <div className="flex gap-2">
                           {status === 'Persemaian' && (
                             <button 
                               onClick={() => {
@@ -318,24 +512,32 @@ export function DashboardKebun() {
                                 });
                                 setActiveModal("pindahTanam");
                               }} 
-                              className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium transition-colors"
+                              className="text-xs bg-[#008060]/10 text-[#008060] px-4 py-2 rounded-xl font-bold hover:bg-[#008060]/15 transition-colors h-10 flex items-center justify-center"
                             >
                               Pindah Tanam
                             </button>
                           )}
-                          <button onClick={() => handleDeleteSiklus(item.id)} className="text-red-500 hover:text-red-700 font-medium text-sm">
-                            <Trash2 className="h-4 w-4 inline" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex gap-4">
-              <span>* HSS = Hari Setelah Semai</span>
-              <span>* HST = Hari Setelah Tanam</span>
+                          {(status === 'Pertumbuhan' || status === 'Siap Panen') && (
+                            <button 
+                              onClick={() => {
+                                setSelectedSiklusId(item.id);
+                                setActiveModal("panen");
+                              }} 
+                              className="text-xs bg-green-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-green-700 transition-colors h-10 flex items-center justify-center"
+                            >
+                              Panen
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div className="pt-2 text-[10px] text-gray-400 flex flex-col gap-1">
+                <span>* HSS = Hari Setelah Semai</span>
+                <span>* HST = Hari Setelah Tanam</span>
+              </div>
             </div>
           </div>
         )}
@@ -356,7 +558,7 @@ export function DashboardKebun() {
                       </div>
                       <span className="font-semibold text-gray-800">{v.name}</span>
                     </div>
-                    <button onClick={() => handleDeleteVarietas(v.id)} className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
+                    <button onClick={() => handleDeleteVarietas(v.id, v.name)} className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -533,6 +735,91 @@ export function DashboardKebun() {
                   Simpan Perubahan
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === "panen" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Catat Panen</h3>
+              <button onClick={() => { setActiveModal(null); setSelectedSiklusId(null); }} className="text-gray-400 hover:text-gray-600">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <form className="space-y-4" onSubmit={handlePanenSubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Panen</label>
+                  <input 
+                    type="date" 
+                    value={formPanen.tanggalPanen}
+                    onChange={(e) => setFormPanen({...formPanen, tanggalPanen: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hasil Panen (kg)</label>
+                  <input 
+                    type="number" 
+                    step="0.1"
+                    value={formPanen.hasilKg}
+                    onChange={(e) => setFormPanen({...formPanen, hasilKg: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008060]" 
+                    placeholder="0.0" 
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Masukkan hasil panen dalam kilogram.</p>
+                </div>
+                <button type="submit" className="w-full bg-[#008060] text-white py-3 rounded-xl font-medium hover:bg-[#00664d] transition-colors mt-4">
+                  Simpan Panen
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog Pop-up */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150 border border-gray-100">
+            <div className="p-6 text-center">
+              <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-4 ${
+                confirmDialog.type === "delete" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+              }`}>
+                {confirmDialog.type === "delete" ? (
+                  <AlertTriangle className="h-6 w-6" />
+                ) : (
+                  <HelpCircle className="h-6 w-6" />
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{confirmDialog.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">{confirmDialog.message}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDialog.onConfirm}
+                  className={`px-4 py-2.5 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm ${
+                    confirmDialog.type === "delete" 
+                      ? "bg-red-600 hover:bg-red-700" 
+                      : "bg-[#008060] hover:bg-[#004D40]"
+                  }`}
+                >
+                  {confirmDialog.type === "delete" ? "Ya, Hapus" : "Ya, Simpan"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

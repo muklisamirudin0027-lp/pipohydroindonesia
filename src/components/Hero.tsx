@@ -2,13 +2,29 @@ import { ArrowRight, Leaf, Droplets, ThermometerSun } from "lucide-react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 
-export function Hero() {
+interface HeroProps {
+  content?: {
+    badge: string;
+    titleLine1: string;
+    titleLine2Highlight: string;
+    description: string;
+    backgroundImage: string;
+  };
+}
+
+export function Hero({ content }: HeroProps) {
+  const badgeText = content?.badge || "100% BEBAS PESTISIDA";
+  const titleLine1 = content?.titleLine1 || "Sayuran Segar,";
+  const titleLine2Highlight = content?.titleLine2Highlight || "Berkualitas Premium.";
+  const description = content?.description || "Dari kebun hidroponik lokal di Blora, Jawa Tengah. Kami menanam berbagai varietas selada segar, renyah, dan sehat menggunakan metode NFT (Nutrient Film Technique) terbaik.";
+  const backgroundImage = content?.backgroundImage || "https://images.unsplash.com/photo-1557844352-761f2565b576?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80";
+
   return (
     <section id="home" className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
       {/* Background Image - Full bleed */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1557844352-761f2565b576?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+          src={backgroundImage}
           alt="Modern Vertical Hydroponic Garden"
           className="h-full w-full object-cover"
         />
@@ -31,19 +47,19 @@ export function Hero() {
               <span className="relative inline-flex h-2 sm:h-2.5 w-2 sm:w-2.5 rounded-full bg-[#4ADE80]"></span>
             </span>
             <span className="text-[10px] sm:text-xs font-semibold tracking-widest text-white">
-              100% BEBAS PESTISIDA
+              {badgeText}
             </span>
           </div>
           
           <h1 className="mb-4 sm:mb-6 max-w-4xl text-4xl sm:text-5xl font-light leading-[1.15] tracking-tight text-white md:text-6xl lg:text-7xl">
-            Sayuran Segar, <br className="hidden sm:block" />
-            <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#4ADE80] to-[#008060]">
-              Berkualitas Premium.
+            {titleLine1} <br className="hidden sm:block" />
+            <span className="font-semibold text-[#4ADE80] block mt-1">
+              {titleLine2Highlight}
             </span>
           </h1>
           
           <p className="mb-8 sm:mb-10 max-w-2xl text-sm sm:text-base font-light leading-relaxed text-gray-300 md:text-lg">
-            Dari kebun hidroponik lokal di Blora, Jawa Tengah. Kami menanam berbagai varietas selada segar, renyah, dan sehat menggunakan metode NFT (Nutrient Film Technique) terbaik.
+            {description}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
@@ -56,8 +72,8 @@ export function Hero() {
               PESAN SEKARANG
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
-            <a href="#about-us" className="flex w-full sm:w-auto items-center justify-center gap-3 rounded-full border border-white/30 bg-white/5 px-6 py-3.5 sm:px-8 sm:py-4 text-xs sm:text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:bg-white hover:text-[#004D40]">
-              CERITA KAMI
+            <a href="#aplikasi" className="flex w-full sm:w-auto items-center justify-center gap-3 rounded-full border border-white/30 bg-white/5 px-6 py-3.5 sm:px-8 sm:py-4 text-xs sm:text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:bg-white hover:text-[#004D40]">
+              COBA APLIKASI WEB
             </a>
           </div>
         </motion.div>

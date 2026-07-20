@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { User, Lock, Bell, Store, Shield } from "lucide-react";
+import { User, Lock, Bell, Store, Shield, AlertTriangle, HelpCircle } from "lucide-react";
 import { auth, db } from "../../lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export function DashboardPengaturan() {
   const [activeTab, setActiveTab] = useState("profil");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: "delete" | "save";
+  } | null>(null);
   const [farmName, setFarmName] = useState("");
   const [managerName, setManagerName] = useState("");
   const [address, setAddress] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,10 +32,21 @@ export function DashboardPengaturan() {
             setFarmName(data.farmName || "");
             setManagerName(data.managerName || data.name || "");
             setAddress(data.address || "");
+            setContactNumber(data.contactNumber || "");
             setLogoUrl(data.logoUrl || "");
           }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+        } catch (error: any) {
+          const isOffline = error instanceof Error && (
+            error.message.toLowerCase().includes("offline") || 
+            error.message.toLowerCase().includes("could not reach") || 
+            error.message.toLowerCase().includes("network") || 
+            error.message.toLowerCase().includes("unavailable")
+          );
+          if (isOffline) {
+            console.warn("Error fetching user data in Settings (client is offline):", error.message || error);
+          } else {
+            console.error("Error fetching user data:", error);
+          }
         }
       }
       setLoading(false);
@@ -51,24 +69,46 @@ export function DashboardPengaturan() {
     const user = auth.currentUser;
     if (!user) return;
     
-    setSaving(true);
-    setMessage({ text: "", type: "" });
-    try {
-      const docRef = doc(db, "users", user.uid);
-      await setDoc(docRef, {
-        farmName,
-        managerName,
-        address,
-        logoUrl
-      }, { merge: true });
-      setMessage({ text: "Profil berhasil disimpan!", type: "success" });
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      setMessage({ text: "Gagal menyimpan profil.", type: "error" });
-    }
-    setSaving(false);
-    
-    setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+    setConfirmDialog({
+      title: "Simpan Profil Kebun",
+      message: "Apakah Anda yakin ingin menyimpan semua perubahan pada profil kebun Anda?",
+      type: "save",
+      onConfirm: async () => {
+        setSaving(true);
+        setMessage({ text: "", type: "" });
+        setConfirmDialog(null);
+
+        try {
+          const docRef = doc(db, "users", user.uid);
+          await setDoc(docRef, {
+            farmName,
+            managerName,
+            address,
+            contactNumber,
+            logoUrl
+          }, { merge: true });
+
+          setMessage({ text: "Profil berhasil disimpan!", type: "success" });
+        } catch (error: any) {
+          const isOffline = error instanceof Error && (
+            error.message.toLowerCase().includes("offline") || 
+            error.message.toLowerCase().includes("could not reach") || 
+            error.message.toLowerCase().includes("network") || 
+            error.message.toLowerCase().includes("unavailable")
+          );
+          if (isOffline) {
+            console.warn("Error updating profile (client is offline):", error.message || error);
+            setMessage({ text: "Gagal menyimpan profil karena Anda sedang offline. Silakan periksa koneksi internet Anda.", type: "error" });
+          } else {
+            console.error("Error updating profile:", error);
+            setMessage({ text: "Gagal menyimpan profil.", type: "error" });
+          }
+        }
+        setSaving(false);
+        
+        setTimeout(() => setMessage({ text: "", type: "" }), 3000);
+      }
+    });
   };
 
   if (loading) {
@@ -121,7 +161,7 @@ export function DashboardPengaturan() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
+      <div className="hidden md:block">
         <h2 className="text-2xl font-light text-[#424242]">Pengaturan Akun</h2>
         <p className="text-sm text-gray-500 mt-1">Kelola preferensi dan profil Anda.</p>
       </div>
@@ -130,25 +170,25 @@ export function DashboardPengaturan() {
         <div className="flex border-b border-gray-100 overflow-x-auto">
           <button 
             onClick={() => setActiveTab("profil")}
-            className={`px-6 py-4 text-sm font-semibold whitespace-nowrap ${activeTab === 'profil' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 md:px-6 py-4 text-xs md:text-sm font-semibold whitespace-nowrap ${activeTab === 'profil' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Profil Kebun
           </button>
           <button 
             onClick={() => setActiveTab("akun")}
-            className={`px-6 py-4 text-sm font-semibold whitespace-nowrap ${activeTab === 'akun' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 md:px-6 py-4 text-xs md:text-sm font-semibold whitespace-nowrap ${activeTab === 'akun' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Akun & Keamanan
           </button>
           <button 
             onClick={() => setActiveTab("notifikasi")}
-            className={`px-6 py-4 text-sm font-semibold whitespace-nowrap ${activeTab === 'notifikasi' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 md:px-6 py-4 text-xs md:text-sm font-semibold whitespace-nowrap ${activeTab === 'notifikasi' ? 'text-[#008060] border-b-2 border-[#008060]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Notifikasi
           </button>
         </div>
         
-        <div className="p-8 space-y-8">
+        <div className="p-4 md:p-8 space-y-6 md:space-y-8">
           {activeTab === "profil" && (
             <>
               <div className="flex items-center gap-6 pb-8 border-b border-gray-50">
@@ -213,6 +253,17 @@ export function DashboardPengaturan() {
                     placeholder="Alamat Kebun Anda" 
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]"
                   ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nomor Kontak (WhatsApp / Telepon)</label>
+                  <input 
+                    type="text" 
+                    value={contactNumber}
+                    onChange={(e) => setContactNumber(e.target.value)}
+                    placeholder="0812-xxxx-xxxx" 
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008060]"
+                  />
                 </div>
 
                 <div className="pt-4 flex justify-end">
@@ -303,6 +354,47 @@ export function DashboardPengaturan() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog Pop-up */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-150 border border-gray-100">
+            <div className="p-6 text-center">
+              <div className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-4 ${
+                confirmDialog.type === "delete" ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+              }`}>
+                {confirmDialog.type === "delete" ? (
+                  <AlertTriangle className="h-6 w-6" />
+                ) : (
+                  <HelpCircle className="h-6 w-6" />
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">{confirmDialog.title}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6">{confirmDialog.message}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDialog.onConfirm}
+                  className={`px-4 py-2.5 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm ${
+                    confirmDialog.type === "delete" 
+                      ? "bg-red-600 hover:bg-red-700" 
+                      : "bg-[#008060] hover:bg-[#004D40]"
+                  }`}
+                >
+                  Ya, Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

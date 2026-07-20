@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based authorization",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"]
+        },
+        "farmName": {
+          "type": "string"
+        },
+        "managerName": {
+          "type": "string"
+        },
+        "logoUrl": {
+          "type": "string"
+        },
+        "contactNumber": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": ["role"]
+    },
+    "WebsiteContent": {
+      "title": "WebsiteContent",
+      "description": "CMS configurations for the landing page",
+      "type": "object",
+      "properties": {
+        "hero": {
+          "type": "object"
+        },
+        "about": {
+          "type": "object"
+        },
+        "products": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles"
+    },
+    "/website_content/{documentId}": {
+      "schema": "WebsiteContent",
+      "description": "Public content configurations for the landing page"
+    }
+  }
+}

@@ -35,11 +35,17 @@ export function Login() {
         navigate("/dashboard"); 
       }
     } catch (e: any) {
-      console.error("Error getting user role:", e);
-      if (e.message && e.message.includes("client is offline")) {
-        // Let them in anyway if offline
+      const isOffline = e instanceof Error && (
+        e.message.toLowerCase().includes("offline") || 
+        e.message.toLowerCase().includes("could not reach") || 
+        e.message.toLowerCase().includes("network") || 
+        e.message.toLowerCase().includes("unavailable")
+      );
+      if (isOffline) {
+        console.warn("Error getting user role (client is offline):", e.message || e);
         navigate("/dashboard");
       } else {
+        console.error("Error getting user role:", e);
         navigate("/dashboard"); // Default fallback
       }
     }
@@ -49,13 +55,62 @@ export function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    
+    const isSpecialAdmin = email.trim().toLowerCase() === "admin@pipohydro.com" && password === "adminpipohydro";
+
     try {
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (signInErr: any) {
+        // If it's the custom admin credential and sign-in failed (e.g. account not created yet), auto-create it!
+        if (isSpecialAdmin && (
+          signInErr.code === "auth/user-not-found" || 
+          signInErr.code === "auth/invalid-credential" || 
+          signInErr.code === "auth/wrong-password" ||
+          signInErr.code === "auth/invalid-email"
+        )) {
+          const { createUserWithEmailAndPassword } = await import("firebase/auth");
+          userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+          
+          // Seed the admin profile in Firestore
+          const { setDoc, doc } = await import("firebase/firestore");
+          await setDoc(doc(db, "users", userCredential.user.uid), {
+            role: "admin",
+            farmName: "Pipo Hydro Indonesia",
+            managerName: "Administrator Website",
+            logoUrl: "/logo-hijau.webp",
+            contactNumber: "081234567890",
+            address: "Blora, Jawa Tengah"
+          });
+        } else {
+          throw signInErr;
+        }
+      }
+
+      // Ensure the admin document in Firestore has role "admin"
+      if (isSpecialAdmin && userCredential) {
+        const { setDoc, doc } = await import("firebase/firestore");
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          role: "admin",
+          farmName: "Pipo Hydro Indonesia",
+          managerName: "Administrator Website",
+          logoUrl: "/logo-hijau.webp",
+          contactNumber: "081234567890",
+          address: "Blora, Jawa Tengah"
+        }, { merge: true });
+      }
+
       await checkRoleAndNavigate(userCredential.user.uid);
     } catch (err: any) {
-      setError("Email atau password salah.");
-      console.error(err);
+      if (err.code === "auth/network-request-failed") {
+        setError("Gagal terhubung. Periksa koneksi internet Anda.");
+      } else {
+        setError("Email atau password salah.");
+      }
+      console.warn(err);
     } finally {
       setLoading(false);
     }
@@ -69,8 +124,12 @@ export function Login() {
       const result = await signInWithPopup(auth, googleProvider);
       await checkRoleAndNavigate(result.user.uid);
     } catch (err: any) {
-      setError("Gagal masuk dengan Google.");
-      console.error(err);
+      if (err.code === "auth/network-request-failed") {
+        setError("Gagal terhubung. Periksa koneksi internet Anda.");
+      } else {
+        setError("Gagal masuk dengan Google.");
+      }
+      console.warn(err);
     } finally {
       setLoading(false);
     }
@@ -216,7 +275,7 @@ export function Login() {
             Masuk dengan Google
           </button>
 
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-xs font-light text-gray-500">
               Belum punya akun?{" "}
               <Link to="/register" className="font-semibold text-[#008060] hover:text-[#004D40]">

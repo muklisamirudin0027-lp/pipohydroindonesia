@@ -2,8 +2,19 @@ import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 
-export function FeaturedProducts() {
-  const products = [
+interface ProductItem {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+}
+
+interface FeaturedProductsProps {
+  items?: ProductItem[];
+}
+
+export function FeaturedProducts({ items }: FeaturedProductsProps) {
+  const defaultProducts = [
     {
       id: 1,
       title: "SELADA SEMENTEL",
@@ -26,6 +37,9 @@ export function FeaturedProducts() {
         "https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     },
   ];
+
+  const products = items && items.length > 0 ? items : defaultProducts;
+
 
   return (
     <section className="bg-[#FAFAFA] py-16 sm:py-24 lg:py-32" id="our-produce">

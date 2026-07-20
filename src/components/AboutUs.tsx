@@ -1,6 +1,24 @@
 import { motion } from "motion/react";
 
-export function AboutUs() {
+interface AboutUsProps {
+  content?: {
+    titleLine1: string;
+    titleLine2Highlight: string;
+    paragraph1: string;
+    paragraph2: string;
+    paragraph3: string;
+    image: string;
+  };
+}
+
+export function AboutUs({ content }: AboutUsProps) {
+  const titleLine1 = content?.titleLine1 || "Berawal dari";
+  const titleLine2Highlight = content?.titleLine2Highlight || "Kopi & Inovasi.";
+  const paragraph1 = content?.paragraph1 || "Bermula dari obrolan santai sambil ngopi bersama teman-teman, kami menyadari sebuah peluang besar. Kami ingin mematahkan stigma bahwa bertani harus selalu di lahan persawahan yang luas.";
+  const paragraph2 = content?.paragraph2 || "Dengan tekad untuk memaksimalkan lahan kosong atau pekarangan rumah, kami membangun sistem hidroponik modern. Pipo Hydro Indonesia membuktikan bahwa pertanian modern bisa dilakukan di lahan terbatas dengan hasil yang jauh lebih optimal.";
+  const paragraph3 = content?.paragraph3 || "Kini, kami fokus menanam berbagai varietas selada menggunakan metode hidroponik NFT yang memastikan setiap helai daun yang Anda nikmati bebas pestisida, jauh lebih renyah, dan bergizi tinggi.";
+  const image = content?.image || "https://images.unsplash.com/photo-1595806653240-5e36502283eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+
   return (
     <section id="about-us" className="bg-[#FAFAFA] py-16 sm:py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -13,7 +31,7 @@ export function AboutUs() {
             className="order-2 lg:order-1 relative aspect-[4/5] sm:aspect-square overflow-hidden group rounded-2xl"
           >
             <img
-              src="https://images.unsplash.com/photo-1595806653240-5e36502283eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+              src={image}
               alt="Botanist inspecting plants"
               className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105"
             />
@@ -34,20 +52,21 @@ export function AboutUs() {
               </span>
             </div>
             <h2 className="mb-6 sm:mb-8 text-3xl font-light tracking-tight text-[#424242] sm:text-4xl lg:text-5xl">
-              Berawal dari <br />
-              <span className="font-semibold text-[#004D40]">Kopi & Inovasi.</span>
+              {titleLine1} <br />
+              <span className="font-semibold text-[#004D40]">{titleLine2Highlight}</span>
             </h2>
             <div className="space-y-4 sm:space-y-6 text-sm sm:text-base font-light leading-relaxed text-gray-600">
               <p>
-                Bermula dari obrolan santai sambil ngopi bersama teman-teman, kami menyadari sebuah peluang besar. Kami ingin mematahkan stigma bahwa bertani harus selalu di lahan persawahan yang luas.
+                {paragraph1}
               </p>
               <p>
-                Dengan tekad untuk memaksimalkan lahan kosong atau pekarangan rumah, kami membangun sistem hidroponik modern. Pipo Hydro Indonesia membuktikan bahwa pertanian modern bisa dilakukan di lahan terbatas dengan hasil yang jauh lebih optimal.
+                {paragraph2}
               </p>
               <p>
-                Kini, kami fokus menanam berbagai varietas selada menggunakan metode hidroponik NFT yang memastikan setiap helai daun yang Anda nikmati bebas pestisida, jauh lebih renyah, dan bergizi tinggi.
+                {paragraph3}
               </p>
             </div>
+
             
             <div className="mt-12">
               <p className="mt-4 text-xs font-semibold tracking-widest text-gray-400">PENDIRI PIPO HYDRO INDONESIA</p>
